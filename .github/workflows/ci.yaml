@@ -261,7 +261,7 @@ jobs:
       - name: Install development tools
         run: |
           yum install -y epel-release centos-release-scl
-          yum install -y devtoolset-9-{make,gcc,gcc-c++} jq rsync
+          yum install -y devtoolset-9-{make,gcc,gcc-c++} {libsecret,libX11,libxkbfile}-devel jq rsync
 
       - name: Install nfpm and envsubst
         run: |
@@ -281,6 +281,9 @@ jobs:
 
       - name: Decompress npm package
         run: tar -xzf package.tar.gz
+
+      - name: Install
+        run: yarn
 
       # NOTE: && here is deliberate - GitHub puts each line in its own `.sh`
       # file when running inside a docker container.

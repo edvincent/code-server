@@ -282,9 +282,6 @@ jobs:
       - name: Decompress npm package
         run: tar -xzf package.tar.gz
 
-      - name: Install
-        run: yarn
-
       # NOTE: && here is deliberate - GitHub puts each line in its own `.sh`
       # file when running inside a docker container.
       - name: Build standalone release

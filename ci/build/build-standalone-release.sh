@@ -41,13 +41,13 @@ create_production_shrinkwrap() {
   # but this actually does not have a package.json (nor it's a package that can be fetched from the repository).
   # Thus `npm shrinkwrap` doesn't know how to generate a lock entry for it, and leaves it empty - which then
   # breaks any subsequent install. We manually remove it, as on every install it will be auto-generated.
-  case "`uname`" in
+  case "$(uname)" in
     Darwin*)
       sed -i '' '/"@parcel\/node-addon-api": {},/d' npm-shrinkwrap.json
-    ;;
+      ;;
     *)
       sed -i '/"@parcel\/node-addon-api": {},/d' npm-shrinkwrap.json
-    ;;
+      ;;
   esac
 }
 

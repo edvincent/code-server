@@ -66,7 +66,7 @@ main() {
     echo "Failed to download cloud agent; --link will not work"
   fi
 
-  if ! vscode_yarn; then
+  if ! vscode_install; then
     echo "You may not have the required dependencies to build the native modules."
     echo "Please see https://github.com/coder/code-server/blob/master/docs/npm.md"
     exit 1
@@ -89,15 +89,41 @@ symlink_asar() {
   fi
 }
 
-vscode_yarn() {
+install_with_yarn_or_npm() {
+  # NOTE@edvincent: We want to keep using the package manager that the end-user was using to install the package.
+  # This also ensures that when *we* run `yarn` in the development process, the yarn.lock file is used.
+  case "${npm_config_user_agent-}" in
+    yarn*)
+      yarn --production --frozen-lockfile
+      ;;
+    npm*)
+      if [ -f "yarn.lock" ]; then
+        echo "yarn.lock file present, yarn should be used rather than npm"
+        exit 1
+      else
+        # NOTE@edvincent: Ideally, this should use `npm ci --production` - which is the equivalent of a
+        # frozen lockfile. NPM 6 doesn't deal well with `npm ci` and optionalDependencies (tries to install them
+        # anyway) - which are used for some Windows-only packages - so until we can upgrade to a higher version
+        # of NPM (along with Node), we rely on NPM's behavior to prefer what's on the lockfile and resolve what isn't.
+        npm install --production
+      fi
+      ;;
+    *)
+      echo "Could not determine which package manager is being used to install code-server"
+      exit 1
+      ;;
+  esac
+}
+
+vscode_install() {
   echo 'Installing Code dependencies...'
   cd lib/vscode
-  yarn --production --frozen-lockfile
+  install_with_yarn_or_npm
 
   symlink_asar
 
   cd extensions
-  yarn --production --frozen-lockfile
+  install_with_yarn_or_npm
 }
 
 main "$@"

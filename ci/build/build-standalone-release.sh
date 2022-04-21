@@ -29,6 +29,41 @@ main() {
 
   cd "$RELEASE_PATH"
   yarn --production --frozen-lockfile
+
+  create_shrinkwraps
+}
+
+create_production_shrinkwrap() {
+  npm shrinkwrap
+
+  # HACK@edvincent: We create the shrinkwrap file from the installed node_modules folder.
+  # Installing node-addon-api also creates an auto-generated folder under @parcel/node-addon-api for gyp,
+  # but this actually does not have a package.json (nor it's a package that can be fetched from the repository).
+  # Thus `npm shrinkwrap` doesn't know how to generate a lock entry for it, and leaves it empty - which then
+  # breaks any subsequent install. We manually remove it, as on every install it will be auto-generated.
+  sed -i '/"@parcel\/node-addon-api": {},/d' npm-shrinkwrap.json
+}
+
+create_shrinkwraps() {
+  # yarn.lock or package-lock.json files (used to ensure deterministic versions of dependencies) are
+  # not packaged when publishing to the NPM registry.
+  # To ensure deterministic dependency versions (even when code-server is installed with NPM), we create
+  # an npm-shrinkwrap.json file from the currently installed node_modules. This ensures the versions used
+  # from development (that the yarn.lock guarantees) are also the ones installed by end-users.
+
+  # We first generate the shrinkwrap file for code-server itself - from being in $RELEASE_PATH
+  create_production_shrinkwrap
+
+  # Then the shrinkwrap files for the bundled VSCode
+  # We don't need to remove the devDependencies for these because we control how it's installed - and
+  # as such we can force the --production flag
+  cd lib/vscode/
+  create_production_shrinkwrap
+
+  cd extensions/
+  create_production_shrinkwrap
+
+  cd ../../
 }
 
 main "$@"

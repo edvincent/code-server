@@ -92,8 +92,8 @@ main() {
 
   case "${npm_config_user_agent-}" in npm*)
     # We are running under npm.
-    if [ "${npm_config_unsafe_perm-}" != "true" ]; then
-      echo "Please pass --unsafe-perm to npm to install code-server"
+    if [ "$(whoami)" = "root" ] && [ "${npm_config_unsafe_perm-}" != "true" ]; then
+      echo "Please pass --unsafe-perm to npm to install code-server as root"
       echo "Otherwise the postinstall script does not have permissions to run"
       echo "See https://docs.npmjs.com/misc/config#unsafe-perm"
       echo "See https://stackoverflow.com/questions/49084929/npm-sudo-global-installation-unsafe-perm"
